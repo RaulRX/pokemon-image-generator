@@ -1,33 +1,41 @@
 
+import logging
 import os
 import torch
 from accelerate import Accelerator
 from tqdm import tqdm
-from src.loader import retrieve_model_parts
+from loader import retrieve_model_parts
 
-learning_rate = float(os.getenv("LEARNING_RATE", "1e-5")) 
+logger = logging.getLogger(__name__)
+
+learning_rate = float(os.getenv("LEARNING_RATE", "1e-5"))
 training_epochs = int(os.getenv("TRAIN_EPOCHS", "2"))
 
 def __prepare_training(unet, traindata_loader):
+    logger.info("Executing __prepare_training")
     optimizer = torch.optim.AdamW(unet.parameters(), lr=learning_rate)
 
     # Acelerador:
     accelerator = Accelerator()
     unet, optimizer, __ = accelerator.prepare(unet, optimizer, traindata_loader)
-    print(accelerator.device)
+    logger.info("Accelerator device: %s", accelerator.device)
 
+    logger.info("Finished __prepare_training")
     return accelerator, unet, optimizer
 
 def start_fine_tunning(traindata_loader, device="cpu"):
+    logger.info("Executing start_fine_tunning")
 
     __, noise_scheduler, text_encoder, vae, unet = retrieve_model_parts(device)
 
     accelerator, unet, optimizer = __prepare_training(unet, traindata_loader)
 
     for epoch in range(training_epochs):
+        logger.info(f"Epoch {epoch} executing")
         progress_bar = tqdm(traindata_loader, desc=f"Epoch {epoch}")
 
         for batch in progress_bar:
+            logger.info(f"Executing {batch} batch loop")
 
             # Se pasan los pixeles al espacio latente con el encoder del VAE:
             with torch.no_grad():
@@ -56,4 +64,6 @@ def start_fine_tunning(traindata_loader, device="cpu"):
 
             progress_bar.set_postfix(loss=loss.item())
 
-    return accelerator.unwrap_model(unet)
+    unwrapped_unet = accelerator.unwrap_model(unet)
+    logger.info("Finished start_fine_tunning")
+    return unwrapped_unet
