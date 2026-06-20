@@ -1,3 +1,4 @@
+python-dotenv
 torch
 torchvision
 diffusers
@@ -6,3 +7,4 @@ accelerate
 datasets
 pillow
 tqdm
+dotenv
