@@ -8,3 +8,5 @@ datasets
 pillow
 tqdm
 dotenv
+huggingface_hub
+safetensors
