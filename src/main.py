@@ -13,7 +13,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from loader import get_traindata_loader, retrieve_model  # noqa: E402
+from loader import get_traindata_loader, retrieve_model, retrieve_model_parts  # noqa: E402
 from repository import upload_model  # noqa: E402
 from trainer import start_fine_tunning  # noqa: E402
 
@@ -37,8 +37,10 @@ def fine_tunning_model(device: str):
 
     # 2. Load training data and run fine-tuning
     logger.info("Step 2: loading training data and starting fine-tuning")
-    traindata_loader = get_traindata_loader()
-    fine_tuned_unet = start_fine_tunning(traindata_loader, device)
+    tokenizer, noise_scheduler, text_encoder, vae, unet = retrieve_model_parts(device)
+    
+    traindata_loader = get_traindata_loader(tokenizer)
+    fine_tuned_unet = start_fine_tunning(traindata_loader, (noise_scheduler, text_encoder, vae, unet),device)
 
     # 3. Test generation again with the fine-tuned unet, same prompt
     logger.info("Step 3: running test generation with fine-tuned UNet")

@@ -28,7 +28,7 @@ def __prepare_training(unet, traindata_loader):
     return accelerator, unet, optimizer
 
 
-def start_fine_tunning(traindata_loader, device: str="cpu"):
+def start_fine_tunning(traindata_loader, model_parts: tuple, device: str="cpu"):
     """Fine-tune the Stable Diffusion UNet on the given training data.
 
     Freezes the VAE and text encoder (via ``retrieve_model_parts``) and trains
@@ -37,6 +37,8 @@ def start_fine_tunning(traindata_loader, device: str="cpu"):
     Args:
         traindata_loader: A ``torch.utils.data.DataLoader`` yielding batches
             of ``pixel_values``, ``input_ids`` and ``attention_mask``.
+        model_parts: Tuple of ``(noise_scheduler, text_encoder, vae, unet)``,
+            as returned by ``retrieve_model_parts``.
         device: Torch device string (e.g. ``"cpu"`` or ``"cuda"``).
 
     Returns:
@@ -44,8 +46,9 @@ def start_fine_tunning(traindata_loader, device: str="cpu"):
         ``Accelerator`` distributed-training wrapper.
     """
     logger.info("Executing start_fine_tunning")
+    noise_scheduler, text_encoder, vae, unet = model_parts
 
-    __, noise_scheduler, text_encoder, vae, unet = retrieve_model_parts(device)
+    # __, noise_scheduler, text_encoder, vae, unet = retrieve_model_parts(device)
 
     accelerator, unet, optimizer = __prepare_training(unet, traindata_loader)
 

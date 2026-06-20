@@ -63,11 +63,12 @@ def print_image(tensor_image, mean, std):
     pil_image.show()
 
 
-def to_rgb_image_tensors(sample_image, resolution=1600, crop="center"):
+def to_rgb_image_tensors(sample_image, column_name: str, resolution=1600, crop="center"):
     """Convert a dataset sample's image to a normalized RGB tensor.
 
     Args:
         sample_image: A dataset row with an ``"image"`` key holding a PIL image.
+        column_name: Key into ``sample_image`` holding the PIL image.
         resolution: Target square resolution in pixels.
         crop: See ``_geometry_transforms``.
 
@@ -75,7 +76,7 @@ def to_rgb_image_tensors(sample_image, resolution=1600, crop="center"):
         A normalized ``torch.Tensor`` of shape ``(3, resolution, resolution)``.
     """
     logger.info("Executing to_rgb_image_tensors")
-    image = sample_image["image"].convert("RGB")
+    image = sample_image[column_name].convert("RGB")
     result = _geometry_transforms(image, [0.5, 0.5, 0.5], resolution, crop)
     logger.info("Finished to_rgb_image_tensors")
     return result
@@ -93,7 +94,7 @@ def tensor_image_to_pil(tensor_image):
     return transforms.ToPILImage()(tensor_image)
 
 
-def to_gray_image_tensors(sample_image, resolution=1600, crop="center"):
+def to_gray_image_tensors(sample_image, column_name: str, resolution=1600, crop="center"):
     """Convert a dataset sample's image to a normalized grayscale tensor.
 
     Args:
@@ -105,7 +106,7 @@ def to_gray_image_tensors(sample_image, resolution=1600, crop="center"):
         A normalized ``torch.Tensor`` of shape ``(1, resolution, resolution)``.
     """
     logger.info("Executing to_gray_image_tensors")
-    image = sample_image["image"].convert("L")
+    image = sample_image[column_name].convert("L")
     result = _geometry_transforms(image, [0.5, 0.5], resolution, crop)
     logger.info("Finished to_gray_image_tensors")
     return result

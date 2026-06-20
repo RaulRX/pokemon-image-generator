@@ -27,26 +27,31 @@ batch_size = int(os.getenv("TRAIN_BATCH_SIZE", 6))
 final_model_name = os.getenv("FTUNNING_MODEL_NAME", "vintage-bookshop-practice")
 hggf_username = os.getenv("HGGF_USERNAME", "")
 hggf_token = os.getenv("HGGF_TOKEN", "")
-
+resolution = int(os.getenv("IMAGE_RESOLUTION", 512))
+crop_type = os.getenv("IMAGE_CROP_METHOD", "center")
 
 class Text2ImageDataset(Dataset):
     """Wraps a Hugging Face dataset of (image, text) pairs for text-to-image fine-tuning."""
 
-    def __init__(self, dataset):
+    def __init__(self, dataset, tokenizer):
         self.dataset = dataset
+        self.tokenizer = tokenizer
 
     def __len__(self):
         return len(self.dataset)
 
     def __getitem__(self, idx):
-        logger.info("Executing Text2ImageDataset.__getitem__")
         example = self.dataset[idx]
-        image = to_rgb_image_tensors(example)
-        token = tokenizer(
-            example["text"],
+        image = to_rgb_image_tensors(
+            sample_image=example, 
+            column_name=dataset_columns[0], 
+            resolution=resolution,
+            crop=crop_type)
+        token = self.tokenizer(
+            example[dataset_columns[1]],
             padding="max_length",
             truncation=True,
-            max_length=tokenizer.model_max_length,
+            max_length=self.tokenizer.model_max_length,
             return_tensors="pt",
         )
         item = {
@@ -54,7 +59,6 @@ class Text2ImageDataset(Dataset):
             "input_ids": token.input_ids.squeeze(0),
             "attention_mask": token.attention_mask.squeeze(0),
         }
-        logger.info("Finished Text2ImageDataset.__getitem__")
         return item
 
 
@@ -132,7 +136,7 @@ def load_finetunned_model(device="cpu"):
     return pipeline
 
 
-def get_traindata_loader():
+def get_traindata_loader(tokenizer):
     """Build the training ``DataLoader`` over the vintage-book illustrations dataset.
 
     Returns:
@@ -142,9 +146,10 @@ def get_traindata_loader():
     logger.info("Executing get_traindata_loader")
     filtered_dataset = __load_dataset()
 
-    train_dataset = Text2ImageDataset(filtered_dataset)
+    train_dataset = Text2ImageDataset(filtered_dataset, tokenizer)
     loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     logger.info("Finished get_traindata_loader")
+
     return loader
 
 
