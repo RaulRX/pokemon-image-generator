@@ -4,3 +4,4 @@ library-ve
 venv
 __pycache__/
 model/base/
+.claude

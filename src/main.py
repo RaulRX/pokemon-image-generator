@@ -31,9 +31,9 @@ def fine_tunning_model(device: str):
     # 1. Load base model and test generation with user-supplied prompt
     logger.info("Step 1: loading base model and running test generation")
     pipeline = retrieve_model(device)
-    # prompt = input("Enter a prompt to test the base model: ")
-    # test_image = pipeline(prompt).images[0]
-    # test_image.show()
+    prompt = input("Enter a prompt to test the base model: ")
+    test_image = pipeline(prompt).images[0]
+    test_image.show()
 
     # 2. Load training data and run fine-tuning
     logger.info("Step 2: loading training data and starting fine-tuning")
@@ -44,7 +44,6 @@ def fine_tunning_model(device: str):
 
     # 3. Test generation again with the fine-tuned unet, same prompt
     logger.info("Step 3: running test generation with fine-tuned UNet")
-    prompt = input("Enter a prompt to test the base model: ")
     pipeline.unet = fine_tuned_unet
     fine_tuned_image = pipeline(prompt).images[0]
     fine_tuned_image.show()
@@ -52,13 +51,15 @@ def fine_tunning_model(device: str):
     logger.info("Finished fine_tunning_model")
     return fine_tuned_unet
 
-
 if __name__ == "__main__":
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    logger.info("Starting fine-tuning run on device: %s", device)
-    fine_tuned_unet = fine_tunning_model(device)
-    save_model = input("Do you wanna save model (Y/N): ")
-    if save_model == "Y":
+    try:
+        device = "cpu"
+        torch.set_num_threads(4)
+        logger.info("Starting fine-tuning run on device: %s", device)
+        fine_tuned_unet = fine_tunning_model(device)
         logger.info("Uploading fine-tuned model")
         upload_model(fine_tuned_unet)
-    logger.info("Fine-tuning run finished")
+        logger.info("Fine-tuning run finished")
+
+    except Exception as ex:
+        logger.error(f"Fatal error: {ex}")

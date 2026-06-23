@@ -45,7 +45,7 @@ def test_finetunned_model(device: str, prompt: str):
 
 
 if __name__ == "__main__":
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
     logger.info("Starting fine-tuned model test on device: %s", device)
     prompt = input("Enter a prompt to test the fine-tuned model: ")
     test_finetunned_model(device, prompt)

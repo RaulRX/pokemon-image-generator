@@ -126,7 +126,6 @@ def load_finetunned_model(device="cpu"):
         pretrained_model_name_or_path=f"{hggf_username}/{final_model_name}-unet",
         token=hggf_token,
     )
-    finetuned_unet.to(device)
 
     pipeline = StableDiffusionPipeline.from_pretrained(
         base_model_name,
@@ -147,7 +146,7 @@ def get_traindata_loader(tokenizer):
     filtered_dataset = __load_dataset()
 
     train_dataset = Text2ImageDataset(filtered_dataset, tokenizer)
-    loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
     logger.info("Finished get_traindata_loader")
 
     return loader
